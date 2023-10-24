@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import javax.swing.*;
+import java.awt.*;
 
 class Edge {
     int sommet1;
@@ -61,60 +63,58 @@ class Graphe {
     }
 
 
-    public void colorierGraphe(int k) {
-        colorierGrapheRécursif(k, 0);
-    }
-
-    private void colorierGrapheRécursif(int k, int sommet) {
-        if (sommet == tailleGraphe) {
-            // Tous les sommets ont été coloriés avec succès
-            return;
+public void colorierGraphe(int k) {
+    boolean coloriable = true;
+    for (int sommet = 0; sommet < tailleGraphe; sommet++) {
+        couleurs[sommet] = attribuerCouleurDisponible(k, sommet);
+        if (couleurs[sommet] == -1) {
+            coloriable = false;
+            break;
         }
-
-        if (estTrivialColorable(k, sommet)) {
-            // Le sommet est trivialement colorable, on le colorie
-            couleurs[sommet] = attribuerCouleurDisponible(k, sommet);
-        } else {
-            // Le sommet n'est pas trivialement colorable, on le "spille"
-            couleurs[sommet] = -1;
-        }
-
-        // Appel récursif pour le sommet suivant
-        colorierGrapheRécursif(k, sommet + 1);
     }
+    if (!coloriable) {
+        System.out.println("\u001B[31m" + "Graphe pas coloriable avec " + k + " couleurs, mais spille les arretes qui ne peuvent pas etre colorés" + "\u001B[0m");
+    } else {
+        System.out.println("\u001B[32m" + "Graphe coloriable avec " + k + " couleurs" + "\u001B[0m");
+        
+    }
+}
 
-  private boolean estTrivialColorable(int k, int sommet) {
-    int degre = 0;
-    for (int autreSommet = 0; autreSommet < tailleGraphe; autreSommet++) {
-        if (estVoisin(sommet, autreSommet) && couleurs[autreSommet] != 0) {
-            degre++;
-            if (aDesAretesDInterference(sommet, autreSommet)) {
-                return false; // Le sommet a une arête d'interférence, il n'est pas trivialement colorable
+
+   
+
+    private boolean estTrivialColorable(int k, int sommet) {
+        int degre = 0;
+        for (int autreSommet = 0; autreSommet < tailleGraphe; autreSommet++) {
+            if (estVoisin(sommet, autreSommet) && couleurs[autreSommet] != 0) {
+                degre++;
+                if (aDesAretesDInterference(sommet, autreSommet)) {
+                    return false; // Le sommet a une arête d'interférence, il n'est pas trivialement colorable
+                }
             }
         }
+        return degre < k;
     }
-    return degre < k;
-}
 
 
-private boolean aDesAretesDInterference(int sommet1, int sommet2) {
-    for (Edge arete : aretesDInterference) {
-        if ((arete.sommet1 == sommet1 && arete.sommet2 == sommet2) ||
-            (arete.sommet1 == sommet2 && arete.sommet2 == sommet1)) {
-            return true; // Il y a une arête d'interférence entre sommet1 et sommet2
+    private boolean aDesAretesDInterference(int sommet1, int sommet2) {
+        for (Edge arete : aretesDInterference) {
+            if ((arete.sommet1 == sommet1 && arete.sommet2 == sommet2) ||
+                    (arete.sommet1 == sommet2 && arete.sommet2 == sommet1)) {
+                return true; // Il y a une arête d'interférence entre sommet1 et sommet2
+            }
         }
+        return false; // Aucune arête d'interférence trouvée
     }
-    return false; // Aucune arête d'interférence trouvée
-}
 
-   private int attribuerCouleurDisponible(int k, int sommet) {
+    private int attribuerCouleurDisponible(int k, int sommet) {
     boolean[] couleursUtilisées = new boolean[k + 1];
     for (int autreSommet = 0; autreSommet < tailleGraphe; autreSommet++) {
-        if (estVoisin(sommet, autreSommet) && couleurs[autreSommet] != 0) {
+        if (estVoisin(sommet, autreSommet) && couleurs[autreSommet] != 0 && !aDesAretesDInterference(sommet, autreSommet)) {
             couleursUtilisées[couleurs[autreSommet]] = true;
         }
     }
-    
+
     // Ajoutez une vérification pour les arêtes de préférence
     for (Edge arete : aretesDePreference) {
         if (arete.sommet1 == sommet || arete.sommet2 == sommet) {
@@ -132,6 +132,7 @@ private boolean aDesAretesDInterference(int sommet1, int sommet2) {
     }
     return -1; // Aucune couleur disponible (ne devrait pas se produire si le graphe est bien k-coloriable)
 }
+
 
 }
 
@@ -192,8 +193,4 @@ public class Main {
             System.out.println("Sommet " + i + " est de couleur " + couleurs[i]);
         }
     }
-
-    
 }
-
-
