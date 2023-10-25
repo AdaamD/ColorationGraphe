@@ -1,3 +1,10 @@
+/*
+
+Adam DAIA
+Mohammed DAFAOUI
+
+*/
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
