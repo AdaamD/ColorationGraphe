@@ -1,7 +1,29 @@
-/*
-
+/* 
 Adam DAIA
-Mohammed DAFAOUI
+Mohammed DAFAOUI    
+---------------------------------------------------
+Voici quelques exemple de graphe à utiliser :
+
+Graphe Cour
+        (préféreces)
+0 1
+0 4
+0 5  
+1 4 
+1 3 
+2 5 
+3 5
+         (interférences)
+4 3      
+__________________________________
+Losange 
+        (préférences)
+0 1
+1 2
+2 3
+3 0
+        (interférences)
+1 3 
 
 */
 
@@ -26,14 +48,14 @@ class Graphe {
     private int[][] matriceAdjacence;
     private List<Edge> aretesDePreference;
     private List<Edge> aretesDInterference;
-    private int[] couleurs; // Tableau pour stocker les couleurs des sommets
+    private int[] couleurs; 
 
     public Graphe(int taille) {
         this.tailleGraphe = taille;
         matriceAdjacence = new int[taille][taille];
         aretesDePreference = new ArrayList<>();
         aretesDInterference = new ArrayList<>();
-        couleurs = new int[taille]; // Initialisation avec des valeurs par défaut
+        couleurs = new int[taille];
     }
 
     public int getTailleGraphe() {
@@ -69,26 +91,22 @@ class Graphe {
         return couleurs;
     }
 
-
-public void colorierGraphe(int k) {
-    boolean coloriable = true;
-    for (int sommet = 0; sommet < tailleGraphe; sommet++) {
-        couleurs[sommet] = attribuerCouleurDisponible(k, sommet);
-        if (couleurs[sommet] == -1) {
-            coloriable = false;
-            break;
+    public void colorierGraphe(int k) {
+        boolean coloriable = true;
+        for (int sommet = 0; sommet < tailleGraphe; sommet++) {
+            couleurs[sommet] = attribuerCouleurDisponible(k, sommet);
+            if (couleurs[sommet] == -1) {
+                coloriable = false;
+                break;
+            }
+        }
+        if (!coloriable) {
+            System.out.println("\u001B[31m" + "Graphe pas coloriable avec " + k + " couleurs, mais spille les arretes qui ne peuvent pas etre colorés" + "\u001B[0m");
+            //System.exit(0); 
+        } else {
+            System.out.println("\u001B[32m" + "Graphe coloriable avec " + k + " couleurs" + "\u001B[0m");
         }
     }
-    if (!coloriable) {
-        System.out.println("\u001B[31m" + "Graphe pas coloriable avec " + k + " couleurs, mais spille les arretes qui ne peuvent pas etre colorés" + "\u001B[0m");
-    } else {
-        System.out.println("\u001B[32m" + "Graphe coloriable avec " + k + " couleurs" + "\u001B[0m");
-        
-    }
-}
-
-
-   
 
     private boolean estTrivialColorable(int k, int sommet) {
         int degre = 0;
@@ -96,57 +114,104 @@ public void colorierGraphe(int k) {
             if (estVoisin(sommet, autreSommet) && couleurs[autreSommet] != 0) {
                 degre++;
                 if (aDesAretesDInterference(sommet, autreSommet)) {
-                    return false; // Le sommet a une arête d'interférence, il n'est pas trivialement colorable
+                    return false; 
                 }
             }
         }
         return degre < k;
     }
 
-
     private boolean aDesAretesDInterference(int sommet1, int sommet2) {
         for (Edge arete : aretesDInterference) {
             if ((arete.sommet1 == sommet1 && arete.sommet2 == sommet2) ||
-                    (arete.sommet1 == sommet2 && arete.sommet2 == sommet1)) {
-                return true; // Il y a une arête d'interférence entre sommet1 et sommet2
+                (arete.sommet1 == sommet2 && arete.sommet2 == sommet1)) {
+                return true; 
             }
         }
-        return false; // Aucune arête d'interférence trouvée
+        return false; 
     }
 
     private int attribuerCouleurDisponible(int k, int sommet) {
-    boolean[] couleursUtilisées = new boolean[k + 1];
-    for (int autreSommet = 0; autreSommet < tailleGraphe; autreSommet++) {
-        if (estVoisin(sommet, autreSommet) && couleurs[autreSommet] != 0 && !aDesAretesDInterference(sommet, autreSommet)) {
-            couleursUtilisées[couleurs[autreSommet]] = true;
-        }
-    }
-
-    // Ajoutez une vérification pour les arêtes de préférence
-    for (Edge arete : aretesDePreference) {
-        if (arete.sommet1 == sommet || arete.sommet2 == sommet) {
-            int autreSommet = (arete.sommet1 == sommet) ? arete.sommet2 : arete.sommet1;
-            if (couleurs[autreSommet] != 0) {
+        boolean[] couleursUtilisées = new boolean[k + 1];
+        for (int autreSommet = 0; autreSommet < tailleGraphe; autreSommet++) {
+            if (estVoisin(sommet, autreSommet) && couleurs[autreSommet] != 0 && !aDesAretesDInterference(sommet, autreSommet)) {
                 couleursUtilisées[couleurs[autreSommet]] = true;
             }
         }
+
+        for (Edge arete : aretesDePreference) {
+            if (arete.sommet1 == sommet || arete.sommet2 == sommet) {
+                int autreSommet = (arete.sommet1 == sommet) ? arete.sommet2 : arete.sommet1;
+                if (couleurs[autreSommet] != 0) {
+                    couleursUtilisées[couleurs[autreSommet]] = true;
+                }
+            }
+        }
+
+        for (int couleur = 1; couleur <= k; couleur++) {
+            if (!couleursUtilisées[couleur]) {
+                return couleur;
+            }
+        }
+        return -1; // Aucune couleur disponible (ne devrait pas se produire si le graphe est bien k-coloriable)
+    }
+}
+
+class GraphPanel extends JPanel {
+    private Graphe graphe;
+
+    public GraphPanel(Graphe graphe) {
+        this.graphe = graphe;
     }
 
-    for (int couleur = 1; couleur <= k; couleur++) {
-        if (!couleursUtilisées[couleur]) {
-            return couleur;
+//Fonction Graphique
+ @Override
+protected void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    int radius = 30;
+    int[] colors = graphe.getCouleurs();
+
+    // Calculer la position des sommets en cercle
+    int centerX = getWidth() / 2;
+    int centerY = getHeight() / 2;
+    int circleRadius = Math.min(getWidth(), getHeight()) / 3;
+    double angleStep = 2 * Math.PI / graphe.getTailleGraphe();
+
+    for (int i = 0; i < graphe.getTailleGraphe(); i++) {
+        int x = (int) (centerX + circleRadius * Math.cos(i * angleStep));
+        int y = (int) (centerY + circleRadius * Math.sin(i * angleStep));
+
+        g.setColor(Color.BLACK);
+        g.drawOval(x - radius, y - radius, 2 * radius, 2 * radius);
+
+        if (colors[i] > 0) {
+            g.setColor(new Color(Math.min(colors[i] * 50, 255), Math.min(colors[i] * 100, 255), Math.min(colors[i] * 150, 255)));
+            g.fillOval(x - radius, y - radius, 2 * radius, 2 * radius);
+        }
+
+        g.setColor(Color.WHITE);
+        g.drawString("Sommet " + i, x - 10, y + 5);
+    }
+
+    for (int i = 0; i < graphe.getTailleGraphe(); i++) {
+        int x1 = (int) (centerX + circleRadius * Math.cos(i * angleStep));
+        int y1 = (int) (centerY + circleRadius * Math.sin(i * angleStep));
+
+        for (int j = 0; j < graphe.getTailleGraphe(); j++) {
+            if (graphe.estVoisin(i, j)) {
+                int x2 = (int) (centerX + circleRadius * Math.cos(j * angleStep));
+                int y2 = (int) (centerY + circleRadius * Math.sin(j * angleStep));
+
+                g.setColor(Color.BLACK);
+                g.drawLine(x1, y1, x2, y2);
+            }
         }
     }
-    return -1; // Aucune couleur disponible (ne devrait pas se produire si le graphe est bien k-coloriable)
 }
 
-
 }
 
-
-
-
-public class Main {
+public class Main extends JFrame {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -199,5 +264,17 @@ public class Main {
         for (int i = 0; i < tailleGraphe; i++) {
             System.out.println("Sommet " + i + " est de couleur " + couleurs[i]);
         }
+
+        // Créer et afficher la fenêtre avec le graphe
+        Main frame = new Main(graphe);
+        frame.setSize(600, 600);
+        frame.setLocationRelativeTo(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+       
+    }
+
+    public Main(Graphe graphe) {
+        add(new GraphPanel(graphe));
     }
 }
